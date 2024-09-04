@@ -1,0 +1,21 @@
+{
+  "name": "variamos-security",
+  "version": "0.0.1",
+  "description": "VariaMos security commons for node",
+  "main": "./dist/index.js",
+  "module": "./dist/",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": [
+    "VariaMos",
+    "Security"
+  ],
+  "author": "crodaycat",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
+  }
+}
