@@ -1,5 +1,5 @@
 {
-  "name": "variamos-security",
+  "name": "@variamos/variamos-security",
   "version": "0.0.1",
   "description": "VariaMos security commons for node",
   "main": "./dist/index.js",
