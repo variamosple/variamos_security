@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ResponseModel, SessionInfo } from "../types";
-import { validateSession } from "./IsAuthenticated";
+import { getToken, validateSession } from "./IsAuthenticated";
 import { sessionInfoToSessionUser } from "./Mappers";
 
 /**
@@ -75,7 +75,7 @@ export const hasPermissions =
   async (request: Request, response: Response, next: NextFunction) => {
     try {
       const validationResponse = await validateRolesAndPermissions(
-        request.cookies.authToken,
+        getToken(request),
         permissions,
         roles
       );

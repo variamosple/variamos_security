@@ -4,6 +4,16 @@ import { getPrivateKey, getPublicKey } from "../config/SecurityCofing";
 import { ResponseModel, SessionInfo } from "../types";
 import { sessionInfoToSessionUser } from "./Mappers";
 
+export const getToken = (request: Request): string => {
+  if (request.cookies.authToken) {
+    return request.cookies.authToken;
+  }
+
+  const token = request.headers.authorization;
+
+  return !token ? "" : token.replace("Bearer ", "");
+};
+
 /**
  * Checks if the session has expired.
  *
@@ -105,7 +115,7 @@ export const isAuthenticated = async (
   next: NextFunction
 ) => {
   try {
-    const validationResponse = await validateSession(request.cookies.authToken);
+    const validationResponse = await validateSession(getToken(request));
 
     if (validationResponse.errorCode) {
       return response

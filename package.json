@@ -1,20 +1,20 @@
 {
-  "name": "@variamos/variamos-security",
-  "version": "0.0.13",
+  "name": "@variamosple/variamos-security",
+  "private": false,
+  "version": "0.0.14",
   "description": "VariaMos security commons for node",
   "main": "./dist/index.js",
   "module": "./dist/",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "npm run build",
     "prepack": "npm run build"
   },
   "keywords": [
     "VariaMos",
     "Security"
   ],
-  "author": "crodaycat",
+  "author": "variamosple",
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -23,7 +23,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@variamos/variamos-security": "file:",
+    "@variamosple/variamos-security": "file:",
     "node-jose": "^2.2.0"
   }
 }

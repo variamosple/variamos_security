@@ -1,2 +1,5 @@
 /dist
 /node_modules
+
+# Output of 'npm pack'
+*.tgz
