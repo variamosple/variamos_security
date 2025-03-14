@@ -38,7 +38,7 @@ export const createJwt = async (user: SessionUser, aud?: string) => {
     { format: "compact", alg: "RS256" },
     key
   )
-    .update(JSON.stringify(payload))
+    .update(JSON.stringify(payload), 'utf8')
     .final();
 
   return createdToken;

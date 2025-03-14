@@ -1,7 +1,7 @@
 {
   "name": "@variamosple/variamos-security",
   "private": false,
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "VariaMos security commons for node",
   "main": "./dist/index.js",
   "module": "./dist/",
