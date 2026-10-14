@@ -1,9 +1,22 @@
+import { createPrivateKey, createPublicKey, KeyObject } from "crypto";
 import fs from "fs";
-import jose from "node-jose";
 import path from "path";
 
 const encodig = "utf8";
-const keyStore = jose.JWK.createKeyStore();
+export const PRIVATE_KEY_ID = "private-signing-key";
+export const PUBLIC_KEY_ID = "public-verification-key";
+
+const keyStore = new Map<string, KeyObject>();
+
+/**
+ * Stores a key under its key ID. The first key added under a given ID wins,
+ * as it did with the previous node-jose key store.
+ */
+const addKey = (kid: string, key: KeyObject) => {
+  if (!keyStore.has(kid)) {
+    keyStore.set(kid, key);
+  }
+};
 
 /**
  * Initializes the key store by loading and adding public and private keys from the filesystem.
@@ -11,10 +24,10 @@ const keyStore = jose.JWK.createKeyStore();
  * Reads the private key from the path specified in the environment variable `VARIAMOS_PRIVATE_KEY_PATH`
  * and the public key from the path specified in `VARIAMOS_PUBLIC_KEY_PATH`.
  *
- * The private key is added to the key store with a key ID (`kid`) of "private-signing-key" and usage set to "sig" (signature).
- * The public key is added to the key store with a key ID of "public-verification-key" and usage set to "sig" (signature).
+ * The private key is added to the key store with a key ID (`kid`) of "private-signing-key".
+ * The public key is added to the key store with a key ID of "public-verification-key".
  *
- * Logs a success message with the contents of the key store if initialization is successful.
+ * Logs a success message with the key IDs held by the key store if initialization is successful.
  * Logs an error message if an exception is caught during the process.
  *
  * @returns {Promise<void>} - A promise that resolves when the key store is initialized.
@@ -30,10 +43,7 @@ export const initKeyStore = async () => {
         encodig
       );
 
-      await keyStore.add(privateKeyPEM, "pem", {
-        kid: "private-signing-key",
-        use: "sig",
-      });
+      addKey(PRIVATE_KEY_ID, createPrivateKey(privateKeyPEM));
     }
 
     const publicKeyPath = process.env.VARIAMOS_PUBLIC_KEY_PATH;
@@ -44,15 +54,12 @@ export const initKeyStore = async () => {
         encodig
       );
 
-      await keyStore.add(publicKeyPEM, "pem", {
-        kid: "public-verification-key",
-        use: "sig",
-      });
+      addKey(PUBLIC_KEY_ID, createPublicKey(publicKeyPEM));
     }
 
     console.info(
       "VariaMos-security keystore initilized successfully!",
-      keyStore.all()
+      Array.from(keyStore.keys())
     );
   } catch (err) {
     console.error("Error creating VariaMos-security keystore:", err);
@@ -62,13 +69,15 @@ export const initKeyStore = async () => {
 /**
  * Retrieves the public key from the key store.
  *
- * @returns {Promise<jose.JWK.Key>} - A promise that resolves with the public key from the key store.
+ * @returns {KeyObject | undefined} - The public key, or `undefined` if the key store holds none.
  */
-export const getPublicKey = () => keyStore.get("public-verification-key");
+export const getPublicKey = (): KeyObject | undefined =>
+  keyStore.get(PUBLIC_KEY_ID);
 
 /**
  * Retrieves the private key from the key store.
  *
- * @returns {Promise<jose.JWK.Key>} - A promise that resolves with the private key from the key store.
+ * @returns {KeyObject | undefined} - The private key, or `undefined` if the key store holds none.
  */
-export const getPrivateKey = () => keyStore.get("private-signing-key");
+export const getPrivateKey = (): KeyObject | undefined =>
+  keyStore.get(PRIVATE_KEY_ID);

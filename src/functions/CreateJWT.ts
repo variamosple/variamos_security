@@ -1,5 +1,5 @@
-import jose from "node-jose";
-import { getPrivateKey } from "../config/SecurityCofing";
+import { CompactSign } from "jose";
+import { getPrivateKey, PRIVATE_KEY_ID } from "../config/SecurityCofing";
 import { SessionUser } from "../types";
 
 export const createJwt = async (user: SessionUser, aud?: string) => {
@@ -34,12 +34,13 @@ export const createJwt = async (user: SessionUser, aud?: string) => {
     aud,
   };
 
-  const createdToken = await jose.JWS.createSign(
-    { format: "compact", alg: "RS256" },
-    key
+  // Compact JWS, RS256. The protected header stays `{"alg":"RS256","kid":...}`,
+  // the same bytes the previous node-jose signer produced.
+  const createdToken = await new CompactSign(
+    Buffer.from(JSON.stringify(payload), "utf8")
   )
-    .update(JSON.stringify(payload), 'utf8')
-    .final();
+    .setProtectedHeader({ alg: "RS256", kid: PRIVATE_KEY_ID })
+    .sign(key);
 
   return createdToken;
 };

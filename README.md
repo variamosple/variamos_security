@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project utilizes JSON Web Tokens (JWT) for authentication and authorization. It includes key management using `node-jose` and middleware functions to handle role-based and permission-based access control.
+This project utilizes JSON Web Tokens (JWT) for authentication and authorization. It includes key management using `jose` and middleware functions to handle role-based and permission-based access control.
 
 ## Config
 
@@ -37,7 +37,8 @@ VARIAMOS_PUBLIC_KEY_PATH=path/to/public-key.pem
 ### Dependencies
 
 - `fs` - File system module to read key files.
-- `node-jose` - Library for handling JSON Web Keys (JWK).
+- `jose` - Library for signing and verifying JSON Web Signatures (JWS, RS256).
+- `crypto` - Node.js module that parses PEM keys (KeyObject).
 - `path` - Module to handle and transform file paths.
 - `@types/express` - Type definitions for Express.
 
