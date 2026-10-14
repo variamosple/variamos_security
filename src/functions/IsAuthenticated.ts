@@ -1,8 +1,19 @@
+import { createPublicKey } from "crypto";
 import { NextFunction, Request, Response } from "express";
-import jose from "node-jose";
+import { compactVerify } from "jose";
 import { getPrivateKey, getPublicKey } from "../config/SecurityCofing";
 import { ResponseModel, SessionInfo } from "../types";
 import { sessionInfoToSessionUser } from "./Mappers";
+
+// RSA signature algorithms accepted on verification, same set node-jose allowed for RSA keys.
+const SIGNATURE_ALGORITHMS = [
+  "RS256",
+  "RS384",
+  "RS512",
+  "PS256",
+  "PS384",
+  "PS512",
+];
 
 export const getToken = (request: Request): string => {
   if (request.cookies.authToken) {
@@ -52,7 +63,9 @@ export const validateToken = async (
   let key = getPublicKey();
 
   if (!key) {
-    key = getPrivateKey();
+    // Verification needs the public half: derive it from the private key.
+    const privateKey = getPrivateKey();
+    key = privateKey && createPublicKey(privateKey);
   }
 
   if (!key) {
@@ -64,9 +77,14 @@ export const validateToken = async (
   }
 
   try {
-    const result = await jose.JWS.createVerify(key).verify(token);
+    // compactVerify checks the signature only: exp and aud stay in validateSession.
+    const result = await compactVerify(token, key, {
+      algorithms: SIGNATURE_ALGORITHMS,
+    });
 
-    response.withResponse(JSON.parse(result.payload.toString()));
+    response.withResponse(
+      JSON.parse(Buffer.from(result.payload).toString("utf8"))
+    );
   } catch (err) {
     console.error("Error verifying JWT:", err);
     response.withError(401, "Error on session validation, please try again.");
