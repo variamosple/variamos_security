@@ -1,19 +1,15 @@
 import { createPublicKey } from "crypto";
 import { NextFunction, Request, Response } from "express";
-import { compactVerify } from "jose";
+import { errors, JWTPayload, jwtVerify } from "jose";
 import { getPrivateKey, getPublicKey } from "../config/SecurityCofing";
+import {
+  claimsMode,
+  claimsProblem,
+  JWT_ALGORITHMS,
+  JWT_CLOCK_TOLERANCE_SECONDS,
+} from "../config/TokenClaims";
 import { ResponseModel, SessionInfo } from "../types";
 import { sessionInfoToSessionUser } from "./Mappers";
-
-// RSA signature algorithms accepted on verification, same set node-jose allowed for RSA keys.
-const SIGNATURE_ALGORITHMS = [
-  "RS256",
-  "RS384",
-  "RS512",
-  "PS256",
-  "PS384",
-  "PS512",
-];
 
 export const getToken = (request: Request): string => {
   if (request.cookies.authToken) {
@@ -39,6 +35,11 @@ export const isSessionExpired = (expirationDateInSeconds?: number): boolean => {
 
 /**
  * Validates a given JWT token and returns session information.
+ *
+ * The signature must be RS256 by the platform key. The issuer and the
+ * audience are checked as `VARIAMOS_JWT_CLAIMS_MODE` says (see
+ * `config/TokenClaims`). An expired token is still returned: the admin
+ * service refreshes it; `validateSession` refuses it.
  *
  * @param {string} [token] - The JWT token to be validated. If not provided, an error response is returned.
  * @returns {Promise<ResponseModel<SessionInfo>>} - A promise that resolves to a ResponseModel containing session information or an error message.
@@ -76,21 +77,41 @@ export const validateToken = async (
     );
   }
 
+  let payload: JWTPayload;
   try {
-    // compactVerify checks the signature only: exp and aud stay in validateSession.
-    const result = await compactVerify(token, key, {
-      algorithms: SIGNATURE_ALGORITHMS,
-    });
-
-    response.withResponse(
-      JSON.parse(Buffer.from(result.payload).toString("utf8"))
-    );
+    ({ payload } = await jwtVerify(token, key, {
+      algorithms: JWT_ALGORITHMS,
+      clockTolerance: JWT_CLOCK_TOLERANCE_SECONDS,
+    }));
   } catch (err) {
-    console.error("Error verifying JWT:", err);
-    response.withError(401, "Error on session validation, please try again.");
+    if (!(err instanceof errors.JWTExpired)) {
+      console.error("Error verifying JWT:", err);
+      return response.withError(
+        401,
+        "Error on session validation, please try again."
+      );
+    }
+    // jose checks the signature before the claims: an expired token is
+    // genuine. Its expiry is checked by validateSession.
+    payload = err.payload;
   }
 
-  return response;
+  const problem = claimsProblem(payload);
+  if (problem) {
+    const mode = claimsMode();
+    if (mode === "enforce") {
+      console.error(`JWT refused: ${problem}`);
+      return response.withError(
+        401,
+        "Error on session validation, please try again."
+      );
+    }
+    if (mode === "warn") {
+      console.warn(`JWT accepted although ${problem}`);
+    }
+  }
+
+  return response.withResponse(payload as unknown as SessionInfo);
 };
 
 export const validateSession = async (

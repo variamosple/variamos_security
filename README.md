@@ -21,6 +21,28 @@ To configure the key management, you need to set the following environment varia
   VARIAMOS_PUBLIC_KEY_PATH=path/to/public-key.pem
   ```
 
+### Issuer, audience and algorithm of session tokens (0.0.17)
+
+Every VariaMos service accepts the same session token (single sign-on). Besides its signature, a token is checked for:
+
+- **its algorithm**: RS256 only, the one `createJwt` signs with. Any other algorithm is refused.
+- **its issuer** (`iss`): `VARIAMOS_JWT_ISSUER`, `variamos_ms_admin` by default.
+- **its audience** (`aud`): it must hold `VARIAMOS_JWT_AUDIENCE`, `variamos-platform` by default. The audience names the platform, not one service.
+
+`createJwt(user, host)` sets the issuer and `aud: ["variamos-platform", host]`. The host is the domain the user goes to, as before. Given the `aud` of a token being refreshed, it keeps the host and sets the platform again. `audienceHost(aud)` returns that host, for a token issued before or after 0.0.17.
+
+`VARIAMOS_JWT_CLAIMS_MODE` says what a verifier does with a token whose issuer or audience is wrong or missing:
+
+| Value | Effect |
+| --- | --- |
+| `off` | Nothing, as before 0.0.17. |
+| `warn` (default) | The token is accepted and the reason is logged (`JWT accepted although ...`). |
+| `enforce` | The token is refused with a 401. |
+
+An unknown value counts as `warn`. Tokens issued before 0.0.17 have no issuer: switch a service to `enforce` only once the issuer runs 0.0.17 and those tokens have expired.
+
+`validateToken` still returns an expired token, so the admin service can refresh it. Its signature, issuer and audience are checked as for any other token. `validateSession` refuses it.
+
 Ensure that these environment variables are set in your environment or in a `.env` file if you are using a package like `dotenv` to manage environment variables.
 
 ### Example `.env` File
@@ -30,6 +52,19 @@ Create a `.env` file in the root of your project with the following content:
 ```env
 VARIAMOS_PRIVATE_KEY_PATH=path/to/private-key.pem
 VARIAMOS_PUBLIC_KEY_PATH=path/to/public-key.pem
+# Optional (0.0.17): defaults shown
+VARIAMOS_JWT_ISSUER=variamos_ms_admin
+VARIAMOS_JWT_AUDIENCE=variamos-platform
+VARIAMOS_JWT_CLAIMS_MODE=warn
+```
+
+## Tests
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm run build
 ```
 
 ## Key Management

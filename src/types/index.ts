@@ -17,7 +17,10 @@ export interface SessionInfo {
   email: string;
   roles?: string[];
   permissions?: string[];
-  aud?: string;
+  // The issuer, and the platform audience followed by the host the user
+  // goes to (0.0.17); a token issued before holds the host alone
+  iss?: string;
+  aud?: string | string[];
   iat?: number;
   exp?: number;
 }
