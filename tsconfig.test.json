@@ -1,0 +1,11 @@
+{
+    // The tests, checked apart: Vitest's types need a newer module resolution
+    // than the CommonJS build of the library
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "Bundler"
+    },
+    "include": ["src"],
+    "exclude": ["node_modules"]
+}
