@@ -1,8 +1,8 @@
 name: Library CI
 
 # The library is published to npm by hand: every pull request and every
-# push to main checks the types, the tests, the build and what the package
-# would contain.
+# push to main checks the types, the lint, unused code, the tests, the
+# build and what the package would contain.
 
 on:
   push:
@@ -42,6 +42,13 @@ jobs:
 
       - name: Verify TypeScript types
         run: npm run typecheck
+
+      - name: Run linter
+        run: npm run lint
+
+      # Unused files, exports and dependencies
+      - name: Find dead code
+        run: npm run find-deadcode
 
       - name: Run unit tests
         run: npm test

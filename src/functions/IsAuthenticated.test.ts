@@ -1,9 +1,17 @@
-import { generateKeyPairSync, KeyObject } from "crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { generateKeyPairSync, type KeyObject } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { CompactSign } from "jose";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { initKeyStore } from "../config/SecurityCofing";
 import { audienceHost } from "../config/TokenClaims";
 import { createJwt } from "./CreateJWT";
@@ -32,7 +40,7 @@ const now = () => Math.floor(Date.now() / 1000);
 // attacker would sign it
 const signed = async (
   payload: Record<string, unknown>,
-  { key = platformKeys.privateKey, alg = "RS256" } = {}
+  { key = platformKeys.privateKey, alg = "RS256" } = {},
 ) =>
   new CompactSign(Buffer.from(JSON.stringify(payload), "utf8"))
     .setProtectedHeader({ alg, kid: "private-signing-key" })
@@ -60,11 +68,11 @@ beforeAll(async () => {
   const publicPath = join(dir, "public.pem");
   writeFileSync(
     privatePath,
-    platformKeys.privateKey.export({ type: "pkcs8", format: "pem" })
+    platformKeys.privateKey.export({ type: "pkcs8", format: "pem" }),
   );
   writeFileSync(
     publicPath,
-    platformKeys.publicKey.export({ type: "spki", format: "pem" })
+    platformKeys.publicKey.export({ type: "spki", format: "pem" }),
   );
   vi.stubEnv("VARIAMOS_PRIVATE_KEY_PATH", privatePath);
   vi.stubEnv("VARIAMOS_PUBLIC_KEY_PATH", publicPath);
@@ -89,15 +97,22 @@ const quietly = () => {
 };
 
 describe("createJwt", () => {
-  const payloadOf = (token: string) =>
-    JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
+  const payloadOf = (token: string): Record<string, unknown> => {
+    const payload: unknown = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64url").toString("utf8"),
+    );
+    if (typeof payload !== "object" || payload === null) {
+      throw new Error("The token holds no JSON object");
+    }
+    return Object.fromEntries(Object.entries(payload));
+  };
 
   it("sets the issuer and the platform audience, followed by the host", async () => {
     const payload = payloadOf(await createJwt(user, "app.variamos.com"));
 
     expect(payload.iss).toBe("variamos_ms_admin");
     expect(payload.aud).toEqual(["variamos-platform", "app.variamos.com"]);
-    expect(payload.exp - payload.iat).toBe(900);
+    expect(Number(payload.exp) - Number(payload.iat)).toBe(900);
   });
 
   it("sets the platform audience alone without a host", async () => {
@@ -131,8 +146,8 @@ describe("createJwt", () => {
   it("keeps the protected header of the previous signer", async () => {
     const header = JSON.parse(
       Buffer.from((await createJwt(user)).split(".")[0], "base64url").toString(
-        "utf8"
-      )
+        "utf8",
+      ),
     );
     expect(header).toEqual({ alg: "RS256", kid: "private-signing-key" });
   });
@@ -143,7 +158,7 @@ describe("validateToken", () => {
     for (const mode of ["off", "warn", "enforce"]) {
       vi.stubEnv("VARIAMOS_JWT_CLAIMS_MODE", mode);
       const response = await validateToken(
-        await createJwt(user, "app.variamos.com")
+        await createJwt(user, "app.variamos.com"),
       );
       expect(response.errorCode).toBeUndefined();
       expect(response.data?.sub).toBe("user-1");
@@ -168,7 +183,7 @@ describe("validateToken", () => {
     quietly();
     const secret = new Uint8Array(32).fill(7);
     const token = await new CompactSign(
-      Buffer.from(JSON.stringify(claims()), "utf8")
+      Buffer.from(JSON.stringify(claims()), "utf8"),
     )
       .setProtectedHeader({ alg: "HS256" })
       .sign(secret);
@@ -201,7 +216,9 @@ describe("validateToken", () => {
       const response = await validateToken(await oldToken());
 
       expect(response.errorCode).toBeUndefined();
-      expect(warn).toHaveBeenCalledWith("JWT accepted although no issuer (iss)");
+      expect(warn).toHaveBeenCalledWith(
+        "JWT accepted although no issuer (iss)",
+      );
     });
 
     it("enforce: refuses a token without issuer", async () => {
@@ -221,7 +238,7 @@ describe("validateToken", () => {
       expect((await validateToken(otherIssuer)).errorCode).toBe(401);
       expect((await validateToken(hostOnly)).errorCode).toBe(401);
       expect(error).toHaveBeenCalledWith(
-        'JWT refused: audience (aud) does not hold "variamos-platform"'
+        'JWT refused: audience (aud) does not hold "variamos-platform"',
       );
     });
 
@@ -231,7 +248,9 @@ describe("validateToken", () => {
       vi.stubEnv("VARIAMOS_JWT_AUDIENCE", "audience-x");
       quietly();
 
-      const token = await signed(claims({ iss: "issuer-x", aud: "audience-x" }));
+      const token = await signed(
+        claims({ iss: "issuer-x", aud: "audience-x" }),
+      );
 
       expect((await validateToken(token)).errorCode).toBeUndefined();
       expect((await validateToken(await signed(claims()))).errorCode).toBe(401);
@@ -243,7 +262,7 @@ describe("validateToken", () => {
 
       expect((await validateToken(await oldToken())).errorCode).toBeUndefined();
       expect(warn).toHaveBeenCalledWith(
-        'VARIAMOS_JWT_CLAIMS_MODE "enforced" is not one of off, warn, enforce: "warn" is used'
+        'VARIAMOS_JWT_CLAIMS_MODE "enforced" is not one of off, warn, enforce: "warn" is used',
       );
     });
   });
@@ -266,7 +285,7 @@ describe("validateToken", () => {
 
       expect(response.errorCode).toBe(401);
       expect(response.message).toBe(
-        "Your session has expired, please log in again."
+        "Your session has expired, please log in again.",
       );
     });
 
@@ -275,7 +294,7 @@ describe("validateToken", () => {
       quietly();
 
       expect(
-        (await validateToken(await expired({ iss: "someone-else" }))).errorCode
+        (await validateToken(await expired({ iss: "someone-else" }))).errorCode,
       ).toBe(401);
     });
 
@@ -283,7 +302,7 @@ describe("validateToken", () => {
       quietly();
       const token = await signed(
         claims({ iat: now() - 7200, exp: now() - 3600 }),
-        { key: otherKeys.privateKey }
+        { key: otherKeys.privateKey },
       );
 
       expect((await validateToken(token)).errorCode).toBe(401);
@@ -311,10 +330,10 @@ describe("validateRolesAndPermissions", () => {
     const foreign = await signed(claims({ iss: "someone-else" }));
 
     expect(
-      (await validateRolesAndPermissions(valid, ["users::query"])).errorCode
+      (await validateRolesAndPermissions(valid, ["users::query"])).errorCode,
     ).toBeUndefined();
     expect(
-      (await validateRolesAndPermissions(foreign, ["users::query"])).errorCode
+      (await validateRolesAndPermissions(foreign, ["users::query"])).errorCode,
     ).toBe(401);
   });
 });
@@ -322,7 +341,7 @@ describe("validateRolesAndPermissions", () => {
 describe("audienceHost", () => {
   it("gives the host of a new or old audience, never the platform", () => {
     expect(audienceHost(["variamos-platform", "app.variamos.com"])).toBe(
-      "app.variamos.com"
+      "app.variamos.com",
     );
     expect(audienceHost("app.variamos.com")).toBe("app.variamos.com");
     expect(audienceHost("variamos-platform")).toBeUndefined();

@@ -31,7 +31,8 @@ const unexpected = files.filter(
 
 if (missing.length > 0 || unexpected.length > 0) {
   if (missing.length > 0) console.error("Missing from the package:", missing);
-  if (unexpected.length > 0) console.error("Not meant to be published:", unexpected);
+  if (unexpected.length > 0)
+    console.error("Not meant to be published:", unexpected);
   process.exit(1);
 }
 console.log(

@@ -1,10 +1,10 @@
-import { createPrivateKey, createPublicKey, KeyObject } from "crypto";
-import fs from "fs";
-import path from "path";
+import { createPrivateKey, createPublicKey, type KeyObject } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 const encodig = "utf8";
 export const PRIVATE_KEY_ID = "private-signing-key";
-export const PUBLIC_KEY_ID = "public-verification-key";
+const PUBLIC_KEY_ID = "public-verification-key";
 
 const keyStore = new Map<string, KeyObject>();
 
@@ -27,20 +27,19 @@ const addKey = (kid: string, key: KeyObject) => {
  * The private key is added to the key store with a key ID (`kid`) of "private-signing-key".
  * The public key is added to the key store with a key ID of "public-verification-key".
  *
- * Logs a success message with the key IDs held by the key store if initialization is successful.
  * Logs an error message if an exception is caught during the process.
  *
  * @returns {Promise<void>} - A promise that resolves when the key store is initialized.
  *
  * @throws {Error} - Throws an error if reading keys from the file system or adding them to the key store fails.
  */
-export const initKeyStore = async () => {
+export const initKeyStore = (): Promise<void> => {
   try {
     const privateKeyPath = process.env.VARIAMOS_PRIVATE_KEY_PATH;
-    if (!!privateKeyPath) {
+    if (privateKeyPath) {
       const privateKeyPEM = fs.readFileSync(
         path.resolve(process.cwd(), privateKeyPath),
-        encodig
+        encodig,
       );
 
       addKey(PRIVATE_KEY_ID, createPrivateKey(privateKeyPEM));
@@ -48,22 +47,18 @@ export const initKeyStore = async () => {
 
     const publicKeyPath = process.env.VARIAMOS_PUBLIC_KEY_PATH;
 
-    if (!!publicKeyPath) {
+    if (publicKeyPath) {
       const publicKeyPEM = fs.readFileSync(
         path.resolve(process.cwd(), publicKeyPath),
-        encodig
+        encodig,
       );
 
       addKey(PUBLIC_KEY_ID, createPublicKey(publicKeyPEM));
     }
-
-    console.info(
-      "VariaMos-security keystore initilized successfully!",
-      Array.from(keyStore.keys())
-    );
   } catch (err) {
     console.error("Error creating VariaMos-security keystore:", err);
   }
+  return Promise.resolve();
 };
 
 /**

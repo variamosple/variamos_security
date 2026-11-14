@@ -1,6 +1,3 @@
-// Preserve this import for future use
-// @ts-ignore
-
 export interface SessionUser {
   id: string;
   name: string;
@@ -33,7 +30,7 @@ export class ResponseModel<Type> {
     public errorCode?: number,
     public message?: string,
     public totalCount?: number,
-    public data?: Nullable<Type>
+    public data?: Nullable<Type>,
   ) {}
 
   withResponse(data: Nullable<Type>, totalCount?: number): this {
@@ -45,7 +42,7 @@ export class ResponseModel<Type> {
 
   withResponsePromise(
     data: Nullable<Type>,
-    totalCount?: number
+    totalCount?: number,
   ): Promise<this> {
     this.data = data;
     this.totalCount = totalCount;
@@ -68,10 +65,9 @@ export class ResponseModel<Type> {
   }
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user: Nullable<SessionUser>;
-    }
+// req.user in the consumers' Express handlers (Express 4 and 5)
+declare module "express-serve-static-core" {
+  interface Request {
+    user: Nullable<SessionUser>;
   }
 }

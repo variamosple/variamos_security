@@ -23,6 +23,9 @@ export const JWT_CLOCK_TOLERANCE_SECONDS = 30;
 export type ClaimsMode = "off" | "warn" | "enforce";
 
 const MODES: ClaimsMode[] = ["off", "warn", "enforce"];
+const MODE_NAMES: ReadonlySet<string> = new Set(MODES);
+const isClaimsMode = (value: string): value is ClaimsMode =>
+  MODE_NAMES.has(value);
 let unknownModeLogged = false;
 
 /** `VARIAMOS_JWT_ISSUER`, or the default issuer. */
@@ -37,18 +40,20 @@ export const jwtAudience = (): string =>
 export const claimsMode = (): ClaimsMode => {
   const value = process.env.VARIAMOS_JWT_CLAIMS_MODE?.trim().toLowerCase();
   if (!value) return "warn";
-  if ((MODES as string[]).includes(value)) return value as ClaimsMode;
+  if (isClaimsMode(value)) return value;
   if (!unknownModeLogged) {
     unknownModeLogged = true;
     console.warn(
-      `VARIAMOS_JWT_CLAIMS_MODE "${value}" is not one of ${MODES.join(", ")}: "warn" is used`
+      `VARIAMOS_JWT_CLAIMS_MODE "${value}" is not one of ${MODES.join(", ")}: "warn" is used`,
     );
   }
   return "warn";
 };
 
-const audiences = (aud: unknown): unknown[] =>
-  Array.isArray(aud) ? aud : aud === undefined ? [] : [aud];
+const audiences = (aud: unknown): unknown[] => {
+  if (Array.isArray(aud)) return aud;
+  return aud === undefined ? [] : [aud];
+};
 
 /**
  * Why the issuer or the audience of a verified payload is not the expected
@@ -79,6 +84,6 @@ export const claimsProblem = (payload: {
 export const audienceHost = (aud?: string | string[]): string | undefined => {
   const platform = jwtAudience();
   return audiences(aud).find(
-    (entry): entry is string => typeof entry === "string" && entry !== platform
+    (entry): entry is string => typeof entry === "string" && entry !== platform,
   );
 };
