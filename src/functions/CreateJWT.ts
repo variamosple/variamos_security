@@ -1,5 +1,5 @@
 import { CompactSign } from "jose";
-import { getPrivateKey, PRIVATE_KEY_ID } from "../config/SecurityCofing";
+import { getPrivateKey, PRIVATE_KEY_ID } from "../config/SecurityConfig";
 import { audienceHost, jwtAudience, jwtIssuer } from "../config/TokenClaims";
 import type { SessionUser } from "../types";
 

@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # One weekly PR for every minor and patch update instead of one per package
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    # Majors on hold, as in the admin module repositories
+    ignore:
+      # TypeScript 7 removes the compiler API that Stryker's checker uses
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Vitest 5 breaks Stryker's Vitest runner
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/*"
+        update-types: ["version-update:semver-major"]
+      # Types follow the Node version in use: 26 until Node 28 is LTS
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
