@@ -1,0 +1,53 @@
+name: Library CI
+
+# The library is published to npm by hand: every pull request and every
+# push to main checks the types, the tests, the build and what the package
+# would contain.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # No lifecycle script of the dependencies runs
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # What the consumers install with the library
+      - name: Audit the runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify TypeScript types
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build the library
+        run: npm run build
+
+      - name: Check the package contents
+        run: npm run check-package
