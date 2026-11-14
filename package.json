@@ -6,6 +6,9 @@
   "main": "./dist/index.js",
   "module": "./dist/",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
