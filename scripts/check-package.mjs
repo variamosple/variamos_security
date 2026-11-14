@@ -1,14 +1,23 @@
 // Checks what `npm pack` would publish: the entry points of package.json are
 // in it, and nothing but the build output, the manifest and the readme.
-// Run after the build: node scripts/check-package.mjs
+// Run after the build: npm run check-package
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
+// npm gives the exact path of its own script: nothing is looked up in PATH
+const npmCli = process.env.npm_execpath;
+if (!npmCli) {
+  console.error("Run it through npm: npm run check-package");
+  process.exit(1);
+}
+
 const manifest = JSON.parse(readFileSync("package.json", "utf8"));
 const [pack] = JSON.parse(
-  execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], {
-    encoding: "utf8",
-  }),
+  execFileSync(
+    process.execPath,
+    [npmCli, "pack", "--dry-run", "--json", "--ignore-scripts"],
+    { encoding: "utf8" },
+  ),
 );
 const files = pack.files.map((file) => file.path);
 
