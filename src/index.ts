@@ -1,4 +1,5 @@
 export { initKeyStore } from "./config/SecurityCofing";
+export type { ClaimsMode } from "./config/TokenClaims";
 export {
   audienceHost,
   claimsMode,
@@ -7,6 +8,5 @@ export {
   jwtAudience,
   jwtIssuer,
 } from "./config/TokenClaims";
-export type { ClaimsMode } from "./config/TokenClaims";
 export * from "./functions";
 export * from "./types";

@@ -1,6 +1,6 @@
-import { createPublicKey } from "crypto";
-import { NextFunction, Request, Response } from "express";
-import { errors, JWTPayload, jwtVerify } from "jose";
+import { createPublicKey } from "node:crypto";
+import type { NextFunction, Request, Response } from "express";
+import { decodeJwt, errors, jwtVerify } from "jose";
 import { getPrivateKey, getPublicKey } from "../config/SecurityCofing";
 import {
   claimsMode,
@@ -8,7 +8,7 @@ import {
   JWT_ALGORITHMS,
   JWT_CLOCK_TOLERANCE_SECONDS,
 } from "../config/TokenClaims";
-import { ResponseModel, SessionInfo } from "../types";
+import { ResponseModel, type SessionInfo } from "../types";
 import { sessionInfoToSessionUser } from "./Mappers";
 
 export const getToken = (request: Request): string => {
@@ -53,7 +53,7 @@ export const isSessionExpired = (expirationDateInSeconds?: number): boolean => {
  * }
  */
 export const validateToken = async (
-  token?: string
+  token?: string,
 ): Promise<ResponseModel<SessionInfo>> => {
   const response = new ResponseModel<SessionInfo>();
 
@@ -73,13 +73,15 @@ export const validateToken = async (
     console.error("Public and/or private key not found in keystore");
     return response.withError(
       401,
-      "Error on session validation, please try again."
+      "Error on session validation, please try again.",
     );
   }
 
-  let payload: JWTPayload;
+  // The claims are typed as a session, as jose allows; they are not
+  // checked one by one (a guest token has no e-mail, for instance)
+  let payload: SessionInfo;
   try {
-    ({ payload } = await jwtVerify(token, key, {
+    ({ payload } = await jwtVerify<SessionInfo>(token, key, {
       algorithms: JWT_ALGORITHMS,
       clockTolerance: JWT_CLOCK_TOLERANCE_SECONDS,
     }));
@@ -88,12 +90,12 @@ export const validateToken = async (
       console.error("Error verifying JWT:", err);
       return response.withError(
         401,
-        "Error on session validation, please try again."
+        "Error on session validation, please try again.",
       );
     }
     // jose checks the signature before the claims: an expired token is
     // genuine. Its expiry is checked by validateSession.
-    payload = err.payload;
+    payload = decodeJwt<SessionInfo>(token);
   }
 
   const problem = claimsProblem(payload);
@@ -103,7 +105,7 @@ export const validateToken = async (
       console.error(`JWT refused: ${problem}`);
       return response.withError(
         401,
-        "Error on session validation, please try again."
+        "Error on session validation, please try again.",
       );
     }
     if (mode === "warn") {
@@ -111,20 +113,21 @@ export const validateToken = async (
     }
   }
 
-  return response.withResponse(payload as unknown as SessionInfo);
+  return response.withResponse(payload);
 };
 
 export const validateSession = async (
-  token?: string
+  token?: string,
 ): Promise<ResponseModel<SessionInfo>> => {
   const validationResponse = await validateToken(token);
 
   if (validationResponse.errorCode) {
     return validationResponse;
-  } else if (isSessionExpired(validationResponse.data?.exp)) {
+  }
+  if (isSessionExpired(validationResponse.data?.exp)) {
     return new ResponseModel<SessionInfo>().withError(
       401,
-      "Your session has expired, please log in again."
+      "Your session has expired, please log in again.",
     );
   }
 
@@ -151,7 +154,7 @@ export const validateSession = async (
 export const isAuthenticated = async (
   request: Request,
   response: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const validationResponse = await validateSession(getToken(request));
@@ -171,8 +174,8 @@ export const isAuthenticated = async (
       .json(
         new ResponseModel().withError(
           401,
-          "Error on session validation, please try again."
-        )
+          "Error on session validation, please try again.",
+        ),
       );
   }
 };

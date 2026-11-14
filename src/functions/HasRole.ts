@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { ResponseModel, SessionInfo } from "../types";
+import type { NextFunction, Request, Response } from "express";
+import { ResponseModel, type SessionInfo } from "../types";
 import { getToken, validateSession } from "./IsAuthenticated";
 import { sessionInfoToSessionUser } from "./Mappers";
 
@@ -14,7 +14,7 @@ import { sessionInfoToSessionUser } from "./Mappers";
  */
 export const validateRoles = async (
   token: string,
-  roles: string[]
+  roles: string[],
 ): Promise<ResponseModel<SessionInfo>> => {
   const response = new ResponseModel<SessionInfo>();
   const validationResponse = await validateSession(token);
@@ -23,7 +23,7 @@ export const validateRoles = async (
     return validationResponse;
   }
 
-  const userRoles = validationResponse.data?.roles || [];
+  const userRoles = validationResponse.data?.roles ?? [];
 
   if (!userRoles.some((role) => roles.includes(role))) {
     return response.withError(403, "Access denied, not enough permissions.");

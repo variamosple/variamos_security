@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { ResponseModel, SessionInfo } from "../types";
+import type { NextFunction, Request, Response } from "express";
+import { ResponseModel, type SessionInfo } from "../types";
 import { getToken, validateSession } from "./IsAuthenticated";
 import { sessionInfoToSessionUser } from "./Mappers";
 
@@ -16,11 +16,11 @@ import { sessionInfoToSessionUser } from "./Mappers";
 export const validateRolesAndPermissions = async (
   token: string,
   permissions: string[] = [],
-  roles: string[] = []
+  roles: string[] = [],
 ): Promise<ResponseModel<SessionInfo>> => {
   const response = new ResponseModel<SessionInfo>().withError(
     403,
-    "Access denied, not enough permissions."
+    "Access denied, not enough permissions.",
   );
   const validationResponse = await validateSession(token);
 
@@ -28,17 +28,18 @@ export const validateRolesAndPermissions = async (
     return validationResponse;
   }
 
-  const userRoles = validationResponse.data?.roles || [];
+  const userRoles = validationResponse.data?.roles ?? [];
 
+  // A JavaScript caller may pass null: no role is then required
+  const requiredRoles = roles ?? [];
   if (
-    !!roles &&
-    roles.length != 0 &&
-    !userRoles.some((role) => roles.includes(role))
+    requiredRoles.length > 0 &&
+    !userRoles.some((role) => requiredRoles.includes(role))
   ) {
     return response;
   }
 
-  const userPermission = validationResponse.data?.permissions || [];
+  const userPermission = validationResponse.data?.permissions ?? [];
 
   if (!userPermission.some((permission) => permissions.includes(permission))) {
     return response;
@@ -77,7 +78,7 @@ export const hasPermissions =
       const validationResponse = await validateRolesAndPermissions(
         getToken(request),
         permissions,
-        roles
+        roles,
       );
 
       if (validationResponse.errorCode) {
@@ -94,7 +95,7 @@ export const hasPermissions =
         "Error verifying user permissions and roles:",
         permissions,
         roles,
-        err
+        err,
       );
       response.status(500).json({ errorMessage: "Internal server error" });
     }

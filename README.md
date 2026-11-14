@@ -58,14 +58,21 @@ VARIAMOS_JWT_AUDIENCE=variamos-platform
 VARIAMOS_JWT_CLAIMS_MODE=warn
 ```
 
-## Tests
+## Development
+
+Requires Node 26. The CI runs the same commands on every pull request; the package is published to npm by hand.
 
 ```sh
 npm ci
 npm run typecheck
+npm run lint            # Biome (shared configuration of the admin module), no rule silenced in a comment
+npm run find-deadcode   # knip: unused files, exports and dependencies
 npm test
 npm run build
+npm run check-package   # what npm pack would publish, then publint
 ```
+
+`npm run format` formats the code with Biome.
 
 ## Key Management
 
@@ -95,7 +102,6 @@ export const initKeyStore: () => Promise<void>;
 - Reads the public key from the path specified in `VARIAMOS_PUBLIC_KEY_PATH`.
 - Adds the private key to the key store with a key ID of "private-signing-key" and usage set to "sig".
 - Adds the public key to the key store with a key ID of "public-verification-key" and usage set to "sig".
-- Logs a success message with the contents of the key store if initialization is successful.
 - Logs an error message if an exception occurs during initialization.
 
 ## Middleware Functions

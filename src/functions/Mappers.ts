@@ -1,9 +1,9 @@
-import { Nullable, SessionInfo, SessionUser } from "../types";
+import type { Nullable, SessionInfo, SessionUser } from "../types";
 
 export const sessionInfoToSessionUser = (
-  sessionInfo: Nullable<SessionInfo>
+  sessionInfo: Nullable<SessionInfo>,
 ): SessionUser | null => {
-  if (!sessionInfo || Object.keys(sessionInfo).length == 0) {
+  if (!sessionInfo || Object.keys(sessionInfo).length === 0) {
     return null;
   }
 
