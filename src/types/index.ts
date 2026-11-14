@@ -24,14 +24,29 @@ export interface SessionInfo {
 
 export type Nullable<T> = T | null | undefined;
 
+/** The fields of an answer, all optional: `new ResponseModel({ errorCode: 401 })`. */
+export interface ResponseModelFields<Type> {
+  transactionId?: string;
+  errorCode?: number;
+  message?: string;
+  totalCount?: number;
+  data?: Nullable<Type>;
+}
+
 export class ResponseModel<Type> {
-  constructor(
-    public transactionId?: string,
-    public errorCode?: number,
-    public message?: string,
-    public totalCount?: number,
-    public data?: Nullable<Type>,
-  ) {}
+  transactionId?: string;
+  errorCode?: number;
+  message?: string;
+  totalCount?: number;
+  data?: Nullable<Type>;
+
+  constructor(fields: ResponseModelFields<Type> = {}) {
+    this.transactionId = fields.transactionId;
+    this.errorCode = fields.errorCode;
+    this.message = fields.message;
+    this.totalCount = fields.totalCount;
+    this.data = fields.data;
+  }
 
   withResponse(data: Nullable<Type>, totalCount?: number): this {
     this.data = data;
