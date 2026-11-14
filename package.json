@@ -32,7 +32,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
-    "cspell": "^10.5.0",
+    "cspell": "^10.5.1",
     "husky": "^9.1.7",
     "knip": "^6.45.1",
     "lint-staged": "^17.6.0",
@@ -42,7 +42,7 @@
     "vitest": "^4.1.12"
   },
   "dependencies": {
-    "jose": "^6.2.12"
+    "jose": "^6.2.17"
   },
   "allowScripts": {
     "esbuild@0.27.2": true
