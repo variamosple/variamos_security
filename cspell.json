@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "variamos",
+    "variamosple",
+    "commitlint",
+    "lintstagedrc",
+    "knip",
+    "vitest",
+    "deadcode",
+    "unstub"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "package-lock.json",
+    "biome.shared.jsonc",
+    ".env",
+    ".env.*",
+    "**/*.env",
+    ".git/**"
+  ]
+}

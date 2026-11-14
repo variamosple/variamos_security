@@ -1,7 +1,7 @@
 import { createPublicKey } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import { decodeJwt, errors, jwtVerify } from "jose";
-import { getPrivateKey, getPublicKey } from "../config/SecurityCofing";
+import { getPrivateKey, getPublicKey } from "../config/SecurityConfig";
 import {
   claimsMode,
   claimsProblem,

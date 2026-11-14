@@ -12,7 +12,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { initKeyStore } from "../config/SecurityCofing";
+import { initKeyStore } from "../config/SecurityConfig";
 import { audienceHost } from "../config/TokenClaims";
 import { createJwt } from "./CreateJWT";
 import { validateRolesAndPermissions } from "./HasPermissions";

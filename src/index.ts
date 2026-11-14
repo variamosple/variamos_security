@@ -1,4 +1,4 @@
-export { initKeyStore } from "./config/SecurityCofing";
+export { initKeyStore } from "./config/SecurityConfig";
 export type { ClaimsMode } from "./config/TokenClaims";
 export {
   audienceHost,

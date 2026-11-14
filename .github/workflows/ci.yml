@@ -1,8 +1,8 @@
 name: Library CI
 
 # The library is published to npm by hand: every pull request and every
-# push to main checks the types, the lint, unused code, the tests, the
-# build and what the package would contain.
+# push to main checks the types, the lint, the spelling, unused code, the
+# tests, the build and what the package would contain.
 
 on:
   push:
@@ -45,6 +45,9 @@ jobs:
 
       - name: Run linter
         run: npm run lint
+
+      - name: Check spelling (cspell)
+        run: npm run spell
 
       # Unused files, exports and dependencies
       - name: Find dead code

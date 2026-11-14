@@ -1,0 +1,9 @@
+# Fast checks before a push, so a simple mistake does not wait for the CI.
+# The e2e tests stay in the CI. Skip with `git push --no-verify`.
+required=$(cat .nvmrc)
+current=$(node -p "process.versions.node.split('.')[0]")
+if [ "$current" != "$required" ]; then
+  echo "pre-push: Node $required is required (.nvmrc), Node $current is in use."
+  exit 1
+fi
+npm run typecheck && npm run lint && npm test

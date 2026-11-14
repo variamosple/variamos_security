@@ -2,7 +2,7 @@ import { createPrivateKey, createPublicKey, type KeyObject } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const encodig = "utf8";
+const encoding = "utf8";
 export const PRIVATE_KEY_ID = "private-signing-key";
 const PUBLIC_KEY_ID = "public-verification-key";
 
@@ -39,7 +39,7 @@ export const initKeyStore = (): Promise<void> => {
     if (privateKeyPath) {
       const privateKeyPEM = fs.readFileSync(
         path.resolve(process.cwd(), privateKeyPath),
-        encodig,
+        encoding,
       );
 
       addKey(PRIVATE_KEY_ID, createPrivateKey(privateKeyPEM));
@@ -50,7 +50,7 @@ export const initKeyStore = (): Promise<void> => {
     if (publicKeyPath) {
       const publicKeyPEM = fs.readFileSync(
         path.resolve(process.cwd(), publicKeyPath),
-        encodig,
+        encoding,
       );
 
       addKey(PUBLIC_KEY_ID, createPublicKey(publicKeyPEM));

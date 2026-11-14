@@ -60,12 +60,13 @@ VARIAMOS_JWT_CLAIMS_MODE=warn
 
 ## Development
 
-Requires Node 26. The CI runs the same commands on every pull request; the package is published to npm by hand.
+Requires Node 26 (`.nvmrc`, `.mise.toml`). `npm install` sets up the Git hooks: Biome and cspell on the staged files before a commit, the conventional commit format, and typecheck, lint and tests before a push. The CI runs the same commands on every pull request; the package is published to npm by hand.
 
 ```sh
 npm ci
 npm run typecheck
 npm run lint            # Biome (shared configuration of the admin module), no rule silenced in a comment
+npm run spell           # cspell
 npm run find-deadcode   # knip: unused files, exports and dependencies
 npm test
 npm run build
