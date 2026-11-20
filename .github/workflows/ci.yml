@@ -1,8 +1,9 @@
 name: Library CI
 
 # The library is published to npm by hand: every pull request and every
-# push to main checks the types, the lint, the spelling, unused code, the
-# tests, the build and what the package would contain.
+# push to main runs the shared checks of the organization (types, lint,
+# spelling, unused code, tests, build, package contents):
+# https://github.com/variamosple/.github/blob/main/.github/workflows/npm-package-ci.yml
 
 on:
   push:
@@ -19,45 +20,4 @@ permissions:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      # No lifecycle script of the dependencies runs
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      # What the consumers install with the library
-      - name: Audit the runtime dependencies
-        run: npm audit --omit=dev --audit-level=high
-
-      - name: Verify TypeScript types
-        run: npm run typecheck
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Check spelling (cspell)
-        run: npm run spell
-
-      # Unused files, exports and dependencies
-      - name: Find dead code
-        run: npm run find-deadcode
-
-      - name: Run unit tests
-        run: npm test
-
-      - name: Build the library
-        run: npm run build
-
-      - name: Check the package contents
-        run: npm run check-package
+    uses: variamosple/.github/.github/workflows/npm-package-ci.yml@v1
