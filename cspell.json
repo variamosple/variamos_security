@@ -9,7 +9,10 @@
     "knip",
     "vitest",
     "deadcode",
-    "unstub"
+    "unstub",
+    "genpkey",
+    "pkeyopt",
+    "pubout"
   ],
   "ignorePaths": [
     "node_modules/**",
