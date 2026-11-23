@@ -1,0 +1,13 @@
+# The metadata stays in setup.py; this file names the build backend and
+# configures the tests.
+[build-system]
+# 77: the license as an SPDX expression (license='MIT' in setup.py)
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The tests import the package from this folder, without installing it
+pythonpath = ["."]
+# No .pytest_cache in the repository
+addopts = "-p no:cacheprovider"

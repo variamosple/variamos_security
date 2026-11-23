@@ -12,7 +12,21 @@
     "unstub",
     "genpkey",
     "pkeyopt",
-    "pubout"
+    "pubout",
+    "addopts",
+    "cacheprovider",
+    "delenv",
+    "fastapi",
+    "newkeys",
+    "nvmrc",
+    "pathlib",
+    "pypa",
+    "pypi",
+    "pytest",
+    "pythonpath",
+    "setuptools",
+    "testpaths",
+    "venv"
   ],
   "ignorePaths": [
     "node_modules/**",

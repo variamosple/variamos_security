@@ -1,13 +1,14 @@
 import os
 import logging
 from datetime import datetime, timezone
+from typing import List, Optional, Union
 from jose import jwt
 from variamos_security.config.security_config import get_private_key
 from variamos_security.model.session_user import SessionUser
 
 logger = logging.getLogger(__name__)
 
-def create_jwt(user: SessionUser, aud: str = None) -> str:
+def create_jwt(user: SessionUser, aud: Optional[Union[str, List[str]]] = None) -> str:
     key = get_private_key()
 
     if not user:
