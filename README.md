@@ -4,6 +4,10 @@
 
 This project utilizes JSON Web Tokens (JWT) for authentication and authorization. It includes key management using `jose` and middleware functions to handle role-based and permission-based access control.
 
+### Python package
+
+The Python services (FastAPI, such as `vms_projects`) verify the same session tokens with the Python package [`variamos-security`](https://pypi.org/project/variamos-security/), whose source is in [`python/`](python/README.md). A change to the claims of the tokens must be made in both, and the tests of `python/` check a token signed by this library.
+
 ## Config
 
 ### Environment Variables

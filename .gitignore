@@ -3,3 +3,10 @@
 
 # Output of 'npm pack'
 *.tgz
+
+# Python package (python/)
+__pycache__/
+*.egg-info/
+/python/.venv/
+/python/build/
+/python/dist/

@@ -4,6 +4,10 @@ name: Library CI
 # push to main runs the shared checks of the organization (types, lint,
 # spelling, unused code, tests, build, package contents):
 # https://github.com/variamosple/.github/blob/main/.github/workflows/npm-package-ci.yml
+#
+# The Python package of python/ (PyPI, published by publish-python.yml) is
+# tested on the oldest Python its consumers run (3.9, vms_projects) and on
+# the latest, against tokens signed by the Node library built here.
 
 on:
   push:
@@ -21,3 +25,50 @@ permissions:
 jobs:
   checks:
     uses: variamosple/.github/.github/workflows/npm-package-ci.yml@v1
+
+  python:
+    name: python (${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Python 3.9 has no build for the Ubuntu of ubuntu-latest
+          - python-version: '3.9'
+            os: ubuntu-24.04
+          - python-version: '3.14'
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # The tests verify a token signed by the built Node library
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Build the Node library
+        run: npm ci --ignore-scripts && npm run build
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Locked versions with their hashes, wheels only: no setup script runs
+      - name: Install the test dependencies
+        working-directory: python
+        run: |
+          python -m pip install --require-hashes --only-binary :all: -r requirements-test.txt
+
+      - name: Run the tests
+        working-directory: python
+        env:
+          VARIAMOS_REQUIRE_NODE_TOKEN: '1'
+        run: python -m pytest
