@@ -28,11 +28,16 @@ jobs:
 
   python:
     name: python (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.14']
+        include:
+          # Python 3.9 has no build for the Ubuntu of ubuntu-latest
+          - python-version: '3.9'
+            os: ubuntu-24.04
+          - python-version: '3.14'
+            os: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -56,9 +61,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Locked versions with their hashes, wheels only: no setup script runs
       - name: Install the test dependencies
         working-directory: python
-        run: python -m pip install -r requirements-test.txt
+        run: |
+          python -m pip install --require-hashes --only-binary :all: -r requirements-test.txt
 
       - name: Run the tests
         working-directory: python

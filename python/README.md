@@ -140,9 +140,11 @@ The source of this package lives in the `python/` folder of [variamos_security](
 npm ci && npm run build
 cd python
 python -m venv .venv && . .venv/bin/activate
-pip install -r requirements-test.txt
+pip install --require-hashes --only-binary :all: -r requirements-test.txt
 python -m pytest
 ```
+
+The test and build dependencies are listed in `requirements-test.in` and `requirements-build.in`, and locked with their hashes in the matching `.txt` files. After a change to a `.in` file, compile it again with the command written at its top.
 
 Without Node or without `npm run build`, the tests of Node tokens are skipped; the CI runs them.
 

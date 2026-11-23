@@ -1,0 +1,7 @@
+# What the release builds the package with (python -m build --no-isolation):
+# compiled with its hashes into requirements-build.txt:
+#   uv pip compile --universal --python-version 3.9 --generate-hashes \
+#     requirements-build.in -o requirements-build.txt
+build
+# 77: the license as an SPDX expression (license='MIT' in setup.py)
+setuptools>=77

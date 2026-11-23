@@ -1,0 +1,11 @@
+# What the tests need: compiled with its hashes into requirements-test.txt,
+# for every Python from 3.9 (vms_projects) on:
+#   uv pip compile --universal --python-version 3.9 --generate-hashes \
+#     requirements-test.in -o requirements-test.txt
+pytest>=8
+# FastAPI's TestClient
+httpx>=0.27
+# The dependencies of setup.py, the fastapi extra included
+python-jose
+pydantic>=2
+fastapi>=0.115.0

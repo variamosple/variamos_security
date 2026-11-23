@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -55,15 +56,18 @@ def node_signed(tmp_path_factory):
         if required:
             pytest.fail("Node and the built library (npm run build) are required")
         pytest.skip("Node or the built library (npm run build) is missing")
-    directory = tmp_path_factory.mktemp("node-keys")
-    token = subprocess.run(
-        [node, str(NODE_SCRIPT), str(directory)],
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=REPOSITORY,
-    ).stdout
-    return token, directory / "public.pem"
+    signed = json.loads(
+        subprocess.run(
+            [node, str(NODE_SCRIPT)],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=REPOSITORY,
+        ).stdout
+    )
+    public_path = tmp_path_factory.mktemp("node-keys") / "public.pem"
+    public_path.write_text(signed["publicKey"])
+    return signed["token"], public_path
 
 
 @pytest.fixture
