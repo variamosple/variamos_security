@@ -26,3 +26,12 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  # The Python package of python/: its test and build tools, locked with
+  # their hashes (requirements-*.txt, compiled from the .in files)
+  - package-ecosystem: "pip"
+    directory: "/python"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-tools:
+        patterns: ["*"]
