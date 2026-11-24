@@ -17,7 +17,25 @@ pip install "variamos-security[fastapi]"
 - an issuer, `iss`: `variamos_ms_admin`;
 - an audience, `aud`, that is a list: `["variamos-platform", host]`.
 
-Version 0.0.2 of this package read `aud` as a string only: such a token failed its validation and every authenticated request answered 500. Version 0.0.3 reads `aud` as a string or a list and keeps `iss` (`SessionInfo.iss`, `SessionInfo.aud`). It checks neither of them yet, as the Node verifier in its default `warn` mode does not refuse them.
+Version 0.0.2 of this package read `aud` as a string only: such a token failed its validation and every authenticated request answered 500. Version 0.0.3 reads `aud` as a string or a list and keeps `iss` (`SessionInfo.iss`, `SessionInfo.aud`).
+
+## Verification (0.0.4)
+
+The verifier follows the rules of the Node library:
+
+- **Signature**: RS256 only, with the public key (`VARIAMOS_PUBLIC_KEY_PATH`). With the private key alone, its public half is used and a warning is logged.
+- **Issuer and audience**: the issuer must be `VARIAMOS_JWT_ISSUER` (`variamos_ms_admin` by default) and the audience must hold `VARIAMOS_JWT_AUDIENCE` (`variamos-platform` by default). `VARIAMOS_JWT_CLAIMS_MODE` says what happens to a token whose issuer or audience is wrong or missing:
+
+| Value | Effect |
+| --- | --- |
+| `off` | Nothing. |
+| `warn` (default) | The token is accepted and the reason is logged (`JWT accepted although ...`). |
+| `enforce` | The token is refused with a 401 (`JWT refused: ...`). |
+
+- **Session fields**: a genuine token without the fields of a session (`sub`, `name`, `userName`, `email`), or with a field of the wrong type, is refused with a 401, not a 500. The log names the fields, never their values.
+- **Cookie and header**: the `authToken` cookie is read first. When it is refused as unauthenticated (expired, invalid), the `Authorization: Bearer` header is tried. A valid cookie without the permission answers 403: the header is not tried to gain rights.
+
+`create_jwt(user, host)` signs as the Node library does: the issuer, and `aud: ["variamos-platform", host]`, or `"variamos-platform"` without host. Given the `aud` of a token being refreshed, it keeps the host.
 
 ## Configuration
 
@@ -53,11 +71,11 @@ Version 0.0.2 of this package read `aud` as a string only: such a token failed i
 
 #### `create_jwt`
 
-- **Function:** `create_jwt(user: SessionUser, aud: str = None) -> str`
-- **Description:** Creates a JWT for the given user.
+- **Function:** `create_jwt(user: SessionUser, aud: str | List[str] = None) -> str`
+- **Description:** Creates a JWT for the given user, with the issuer and the platform audience.
 - **Parameters:**
   - `user` (SessionUser): The user for whom the JWT is created.
-  - `aud` (str, optional): The audience for the JWT.
+  - `aud` (str or list, optional): The host the user goes to, or the `aud` of the token being refreshed.
 - **Returns:** The generated JWT as a string.
 
 #### `is_authenticated`
