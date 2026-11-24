@@ -19,7 +19,10 @@ def _use_keys(monkeypatch, private_path, public_path):
         monkeypatch.setenv("VARIAMOS_PRIVATE_KEY_PATH", str(private_path))
     else:
         monkeypatch.delenv("VARIAMOS_PRIVATE_KEY_PATH", raising=False)
-    monkeypatch.setenv("VARIAMOS_PUBLIC_KEY_PATH", str(public_path))
+    if public_path:
+        monkeypatch.setenv("VARIAMOS_PUBLIC_KEY_PATH", str(public_path))
+    else:
+        monkeypatch.delenv("VARIAMOS_PUBLIC_KEY_PATH", raising=False)
     load_keys()
 
 
@@ -43,11 +46,18 @@ def python_keys(monkeypatch, python_key_pair):
     )
 
 
+@pytest.fixture
+def python_private_key_only(monkeypatch, python_key_pair):
+    """Only the private key is configured: the issuer's own setting."""
+    _use_keys(monkeypatch, python_key_pair / "private.pem", None)
+
+
 @pytest.fixture(scope="session")
 def node_signed(tmp_path_factory):
     """
-    A session token signed by the built Node library, with the public key
-    that verifies it. Skipped without Node or without the build, unless
+    Session tokens signed by the built Node library ("session", and with
+    another issuer or audience: "otherIssuer", "otherAudience"), with the
+    public key that verifies them. Skipped without Node or without the build, unless
     VARIAMOS_REQUIRE_NODE_TOKEN=1 (the CI), where it must work.
     """
     required = os.getenv("VARIAMOS_REQUIRE_NODE_TOKEN") == "1"
@@ -67,12 +77,25 @@ def node_signed(tmp_path_factory):
     )
     public_path = tmp_path_factory.mktemp("node-keys") / "public.pem"
     public_path.write_text(signed["publicKey"])
-    return signed["token"], public_path
+    return signed["tokens"], public_path
 
 
 @pytest.fixture
-def node_keys(monkeypatch, node_signed):
+def node_tokens(monkeypatch, node_signed):
     """Verifies with the public key of the Node issuer only, as a service does."""
-    token, public_path = node_signed
+    tokens, public_path = node_signed
     _use_keys(monkeypatch, None, public_path)
-    return token
+    return tokens
+
+
+@pytest.fixture
+def node_keys(node_tokens):
+    """The session token of the Node issuer."""
+    return node_tokens["session"]
+
+
+@pytest.fixture(autouse=True)
+def claims_settings(monkeypatch):
+    """Each test starts from the default issuer, audience and mode."""
+    for name in ("VARIAMOS_JWT_ISSUER", "VARIAMOS_JWT_AUDIENCE", "VARIAMOS_JWT_CLAIMS_MODE"):
+        monkeypatch.delenv(name, raising=False)

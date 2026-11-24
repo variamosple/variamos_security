@@ -4,7 +4,7 @@ from fastapi import Request
 from variamos_security.model.response_model import ResponseModel
 from variamos_security.model.session_info import SessionInfo
 from variamos_security.model.session_user import SessionUser
-from variamos_security.functions.is_authenticated import get_token, validate_session
+from variamos_security.functions.is_authenticated import first_valid, get_tokens, validate_session
 from variamos_security.functions.mappers import session_info_to_session_user
 from variamos_security.exceptions.variamos_security_exception import VariamosSecurityException
 
@@ -32,8 +32,7 @@ def validate_roles_and_permissions(token: str, permissions: List[str] = [], role
 def has_permissions(permissions: List[str] = [], roles: List[str] = []):
     def middleware(request: Request) -> SessionUser:
         try:
-            token = get_token(request)
-            validation_response = validate_roles_and_permissions(token, permissions, roles)
+            validation_response = first_valid(get_tokens(request), lambda token: validate_roles_and_permissions(token, permissions, roles))
 
             if validation_response.errorCode:
                 raise VariamosSecurityException(status_code=validation_response.errorCode, detail=validation_response)

@@ -10,21 +10,30 @@ USER = SessionUser(
 )
 
 
-def test_accepts_a_token_it_signed_with_a_host_audience(python_keys):
+def test_signs_the_issuer_and_the_platform_audience_with_the_host(python_keys):
     response = validate_session(create_jwt(USER, "app.variamos.com"))
 
     assert response.errorCode is None
     assert response.data.sub == "user-1"
-    assert response.data.aud == "app.variamos.com"
+    assert response.data.iss == "variamos_ms_admin"
+    assert response.data.aud == ["variamos-platform", "app.variamos.com"]
 
 
-def test_accepts_a_token_it_signed_with_a_list_audience(python_keys):
+def test_signs_the_platform_audience_alone_without_host(python_keys):
+    assert validate_session(create_jwt(USER)).data.aud == "variamos-platform"
+
+
+def test_keeps_the_host_of_a_token_being_refreshed(python_keys):
     token = create_jwt(USER, ["variamos-platform", "app.variamos.com"])
 
-    response = validate_session(token)
+    assert validate_session(token).data.aud == ["variamos-platform", "app.variamos.com"]
 
-    assert response.errorCode is None
-    assert response.data.aud == ["variamos-platform", "app.variamos.com"]
+
+def test_passes_the_claims_check_it_signs_for(python_keys, monkeypatch, caplog):
+    monkeypatch.setenv("VARIAMOS_JWT_CLAIMS_MODE", "enforce")
+
+    assert validate_session(create_jwt(USER, "app.variamos.com")).errorCode is None
+    assert "JWT" not in caplog.text
 
 
 def test_refuses_an_expired_token(python_keys, monkeypatch):
