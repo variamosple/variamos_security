@@ -45,6 +45,10 @@ Every VariaMos service accepts the same session token (single sign-on). Besides 
 
 An unknown value counts as `warn`. Tokens issued before 0.0.17 have no issuer: switch a service to `enforce` only once the issuer runs 0.0.17 and those tokens have expired.
 
+### Lifetime of session tokens (0.1.1)
+
+`VARIAMOS_JWT_EXP_IN_SECONDS` sets how long a token of `createJwt` lasts, 900 seconds (15 minutes) by default. It must be a whole number of seconds above 0, spaces around it aside. Any other value (empty, not a number, negative, `0`, a decimal such as `1.5`, `1e3`) counts as the default, and a warning names it once (`VARIAMOS_JWT_EXP_IN_SECONDS "..." is not a whole number of seconds above 0: 900 is used`). Before 0.1.1, an empty value signed tokens that were expired at once.
+
 `validateToken` still returns an expired token, so the admin service can refresh it. Its signature, issuer and audience are checked as for any other token. `validateSession` refuses it.
 
 Ensure that these environment variables are set in your environment or in a `.env` file if you are using a package like `dotenv` to manage environment variables.
@@ -60,6 +64,8 @@ VARIAMOS_PUBLIC_KEY_PATH=path/to/public-key.pem
 VARIAMOS_JWT_ISSUER=variamos_ms_admin
 VARIAMOS_JWT_AUDIENCE=variamos-platform
 VARIAMOS_JWT_CLAIMS_MODE=warn
+# Optional (0.1.1): default shown, a whole number of seconds above 0
+VARIAMOS_JWT_EXP_IN_SECONDS=900
 ```
 
 ## Development

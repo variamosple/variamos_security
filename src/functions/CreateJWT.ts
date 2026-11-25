@@ -1,6 +1,7 @@
 import { CompactSign } from "jose";
 import { getPrivateKey, PRIVATE_KEY_ID } from "../config/SecurityConfig";
 import { audienceHost, jwtAudience, jwtIssuer } from "../config/TokenClaims";
+import { jwtExpiresInSeconds } from "../config/TokenLifetime";
 import type { SessionUser } from "../types";
 
 /**
@@ -25,9 +26,7 @@ export const createJwt = async (user: SessionUser, aud?: string | string[]) => {
 
   const { id, name, user: userName, email, roles, permissions } = user;
 
-  const expiresInSeconds = Number(
-    process.env.VARIAMOS_JWT_EXP_IN_SECONDS ?? 900,
-  );
+  const expiresInSeconds = jwtExpiresInSeconds();
   const currentDateInSeconds = Math.floor(Date.now() / 1000);
   const host = audienceHost(aud);
 
