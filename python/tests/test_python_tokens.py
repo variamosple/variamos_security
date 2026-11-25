@@ -36,10 +36,8 @@ def test_passes_the_claims_check_it_signs_for(python_keys, monkeypatch, caplog):
     assert "JWT" not in caplog.text
 
 
-def test_refuses_an_expired_token(python_keys, monkeypatch):
-    monkeypatch.setenv("VARIAMOS_JWT_EXP_IN_SECONDS", "-60")
-
-    response = validate_session(create_jwt(USER))
+def test_refuses_an_expired_token(python_keys, sign_expired):
+    response = validate_session(sign_expired(USER))
 
     assert response.errorCode == 401
     assert "expired" in response.message

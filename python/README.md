@@ -64,6 +64,7 @@ The verifier follows the rules of the Node library:
      ```env
      VARIAMOS_JWT_EXP_IN_SECONDS=900
      ```
+     It must be a whole number of seconds above 0, spaces around it aside. Any other value (empty, not a number, negative, `0`, a decimal) counts as the default, and a warning names it once, as in the Node library 0.1.1. Before 0.0.5, such a value stopped `create_jwt` with a `ValueError` or signed tokens that were expired at once.
 
 ## Usage
 

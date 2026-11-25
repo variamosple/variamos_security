@@ -143,6 +143,27 @@ describe("createJwt", () => {
     expect(payload.aud).toEqual(["audience-x", "host"]);
   });
 
+  it("follows VARIAMOS_JWT_EXP_IN_SECONDS", async () => {
+    vi.stubEnv("VARIAMOS_JWT_EXP_IN_SECONDS", "3600");
+
+    const payload = payloadOf(await createJwt(user));
+
+    expect(Number(payload.exp) - Number(payload.iat)).toBe(3600);
+  });
+
+  // An empty lifetime used to sign a token expired at once
+  it("signs a token of 900 seconds when VARIAMOS_JWT_EXP_IN_SECONDS is empty", async () => {
+    vi.stubEnv("VARIAMOS_JWT_EXP_IN_SECONDS", "");
+    const { warn } = quietly();
+
+    const token = await createJwt(user);
+    const payload = payloadOf(token);
+
+    expect(Number(payload.exp) - Number(payload.iat)).toBe(900);
+    expect(warn).toHaveBeenCalledOnce();
+    expect((await validateSession(token)).errorCode).toBeUndefined();
+  });
+
   it("keeps the protected header of the previous signer", async () => {
     const header = JSON.parse(
       Buffer.from((await createJwt(user)).split(".")[0], "base64url").toString(

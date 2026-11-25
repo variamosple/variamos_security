@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='variamos_security', 
-    version='0.0.4',
+    version='0.0.5',
     packages=find_packages(include=["variamos_security", "variamos_security.*"]),
     install_requires=[
         'python-jose',

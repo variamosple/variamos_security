@@ -133,10 +133,9 @@ def test_verifies_with_the_public_half_of_a_private_key_alone(python_private_key
 # --- two tokens in one request -----------------------------------------------
 
 
-def test_reads_the_header_when_the_cookie_is_stale(python_keys, monkeypatch):
+def test_reads_the_header_when_the_cookie_is_stale(python_keys, sign_expired):
     valid = create_jwt(PERMITTED)
-    monkeypatch.setenv("VARIAMOS_JWT_EXP_IN_SECONDS", "-60")
-    expired = create_jwt(PERMITTED)
+    expired = sign_expired(PERMITTED)
     client = _client()
     client.cookies.set("authToken", expired)
 

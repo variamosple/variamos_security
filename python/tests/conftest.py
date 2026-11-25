@@ -1,13 +1,16 @@
+import importlib
 import json
 import os
 import shutil
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 import rsa
 
 from variamos_security import load_keys
+from variamos_security.config.token_lifetime import DEFAULT_JWT_EXP_IN_SECONDS
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 NODE_SCRIPT = REPOSITORY / "scripts" / "python-test-token.mjs"
@@ -50,6 +53,30 @@ def python_keys(monkeypatch, python_key_pair):
 def python_private_key_only(monkeypatch, python_key_pair):
     """Only the private key is configured: the issuer's own setting."""
     _use_keys(monkeypatch, python_key_pair / "private.pem", None)
+
+
+@pytest.fixture
+def sign_expired(monkeypatch):
+    """
+    Signs with create_jwt as if it were a minute past the default lifetime
+    ago: the token is expired already. A negative lifetime now counts as the
+    default, so the clock is moved back instead.
+    """
+    # The module, not the create_jwt function the package exports by that name
+    module = importlib.import_module("variamos_security.functions.create_jwt")
+    past = datetime.now(timezone.utc) - timedelta(seconds=DEFAULT_JWT_EXP_IN_SECONDS + 60)
+
+    class _Past(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return past
+
+    def sign(user, aud=None):
+        with monkeypatch.context() as clock:
+            clock.setattr(module, "datetime", _Past)
+            return module.create_jwt(user, aud)
+
+    return sign
 
 
 @pytest.fixture(scope="session")
